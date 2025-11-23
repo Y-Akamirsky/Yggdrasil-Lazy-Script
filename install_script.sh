@@ -104,7 +104,7 @@ Exec=sudo $TARGET_NAME
 Terminal=true
 Type=Application
 Categories=Network;System;
-Icon=$ICON_NAME   # ИСПОЛЬЗУЕМ ИМЯ НОВОЙ ИКОНКИ
+Icon=$FULL_ICON_PATH
 StartupNotify=true
 EOF
 
