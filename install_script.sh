@@ -108,6 +108,8 @@ Icon=$FULL_ICON_PATH
 StartupNotify=true
 EOF
 
+# Now with Icon!
+
 chmod +x "$DESKTOP_FILE_PATH"
 update-desktop-database "$HOME/.local/share/applications/" 2>/dev/null
 
