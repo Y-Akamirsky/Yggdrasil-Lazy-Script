@@ -1,57 +1,80 @@
 #!/bin/bash
 
-INSTALL_DIR="$HOME/.local/share/yggdrasil"
-SCRIPT_NAME="yggdrasil_autorun.sh"
-FULL_SCRIPT_PATH="$INSTALL_DIR/$SCRIPT_NAME"
+# --- Настройки ---
+# Определяем, где лежит этот установщик
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SOURCE_SCRIPT="yggdrasil_autorun.sh"
+
+# Новое место установки: системная папка для пользовательских программ
+TARGET_NAME="yggdrasil-launcher"
+TARGET_PATH="/usr/local/bin/$TARGET_NAME"
+
+# Файл правил sudo
+SUDOERS_FILE="/etc/sudoers.d/yggdrasil_lazy"
+
+# Путь к ярлыку (остается в папке пользователя)
+DESKTOP_FILE_PATH="$HOME/.local/share/applications/Yggdrasil-Lazy.desktop"
 CURRENT_USER=$(whoami)
-DESKTOP_FILE_NAME="Yggdrasil-Lazy.desktop"
-DESKTOP_FILE_PATH="$HOME/.local/share/applications/$DESKTOP_FILE_NAME"
 
-echo "Начало установки. Сейчас потребуется ввести ваш пароль администратора (sudo)."
-sudo -v
+echo "--- Установщик Yggdrasil Lazy Launcher ---"
+echo "Скрипт будет установлен в $TARGET_PATH"
+echo "Это потребует ввода пароля администратора (sudo) для настройки прав."
 
-if [ $? -ne 0 ]; then
-    echo "Неверный пароль или отмена. Установка прервана."
+# Проверка наличия исходного файла
+if [ ! -f "$SCRIPT_DIR/$SOURCE_SCRIPT" ]; then
+    echo "ОШИБКА: Файл $SOURCE_SCRIPT не найден в папке $SCRIPT_DIR"
     exit 1
 fi
 
-# --- Установка основного скрипта и sudoers ---
-
-mkdir -p "$INSTALL_DIR"
-cp "./$SCRIPT_NAME" "$FULL_SCRIPT_PATH"
-chmod +x "$FULL_SCRIPT_PATH"
-
-SUDO_RULE="$CURRENT_USER ALL=(ALL) NOPASSWD: $FULL_SCRIPT_PATH"
-if sudo grep -qF "$SUDO_RULE" /etc/sudoers /etc/sudoers.d/*; then
-    echo "Правило sudoers уже существует."
-else
-    echo "Добавляю правило NOPASSWD в /etc/sudoers."
-    sudo sed -i "\$a$SUDO_RULE" /etc/sudoers
+# Запрашиваем права sudo сразу
+if ! sudo -v; then
+    echo "Отмена операции или неверный пароль."
+    exit 1
 fi
 
-# --- Автоматическое создание и установка .desktop файла ---
+# --- 1. Установка скрипта в систему ---
+echo "Установка исполняемого файла..."
 
-echo "Создание файла ярлыка скрипта..."
+# Копируем файл
+sudo cp "$SCRIPT_DIR/$SOURCE_SCRIPT" "$TARGET_PATH"
 
-# Создаем содержимое .desktop файла, используя динамический путь $FULL_SCRIPT_PATH
+# ВАЖНО: Делаем владельцем root (чтобы никто не мог подменить код)
+sudo chown root:root "$TARGET_PATH"
+# Даем права: rwxr-xr-x (владелец: всё, остальные: только чтение и запуск)
+sudo chmod 755 "$TARGET_PATH"
+
+echo "Файл установлен и защищен от изменений."
+
+# --- 2. Настройка sudoers ---
+echo "Настройка запуска без пароля..."
+
+# Правило: Пользователь может запускать ТОЛЬКО ЭТОТ файл без пароля
+SUDO_RULE="$CURRENT_USER ALL=(ALL) NOPASSWD: $TARGET_PATH"
+
+# Записываем безопасно через временный вывод
+echo "$SUDO_RULE" | sudo tee "$SUDOERS_FILE" > /dev/null
+sudo chmod 440 "$SUDOERS_FILE" # Обязательные права для файлов sudoers
+
+echo "Правило добавлено в $SUDOERS_FILE"
+
+# --- 3. Создание ярлыка ---
+echo "Создание ярлыка в меню приложений..."
+
 cat <<EOF > "$DESKTOP_FILE_PATH"
 [Desktop Entry]
 Name=Yggdrasil Lazy
-Comment=Start Yggdrasil service and check connection
-Exec=$FULL_SCRIPT_PATH
+Comment=Start Yggdrasil service manually
+Exec=sudo $TARGET_NAME
 Terminal=true
 Type=Application
-Categories=System;Tools;
+Categories=Network;System;
 Icon=utilities-terminal
 StartupNotify=true
 EOF
 
-# Делаем файл ярлыка исполняемым
 chmod +x "$DESKTOP_FILE_PATH"
-
-# Обновляем базу данных меню приложений (для некоторых DE Linux это нужно)
-update-desktop-database ~/.local/share/applications/ 2>/dev/null
+update-desktop-database "$HOME/.local/share/applications/" 2>/dev/null
 
 echo "---"
-echo "Установка завершена."
-echo "Ярлык 'Yggdrasil Lazy' добавлен в ваше меню приложений."
+echo "Установка успешно завершена!"
+echo "Теперь вы можете запускать Yggdrasil через меню приложений."
