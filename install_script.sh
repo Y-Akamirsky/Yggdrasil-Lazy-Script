@@ -8,7 +8,7 @@ DESKTOP_FILE_PATH="$HOME/.local/share/applications/Yggdrasil-Lazy.desktop"
 CURRENT_USER=$(whoami)
 
 # --- Настройки иконки ---
-ICON_URL="https://logosandtypes.com/wp-content/uploads/2022/03/yggdrasil.svg"
+ICON_URL="https://raw.githubusercontent.com/Y-Akamirsky/Yggdrasil-Lazy-Script/refs/heads/main/yggdrasil.svg"
 ICON_NAME="yggdrasil-lazy" # Уникальное имя для иконки
 ICON_TARGET_DIR="/usr/share/icons/hicolor/scalable/apps"
 FULL_ICON_PATH="$ICON_TARGET_DIR/$ICON_NAME.svg"
