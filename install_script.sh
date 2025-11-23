@@ -9,8 +9,9 @@ CURRENT_USER=$(whoami)
 
 # --- Настройки иконки ---
 ICON_URL="https://raw.githubusercontent.com/Y-Akamirsky/Yggdrasil-Lazy-Script/refs/heads/main/yggdrasil.svg"
-ICON_NAME="yggdrasil-lazy" # Уникальное имя для иконки
-ICON_TARGET_DIR="/usr/share/icons/hicolor/scalable/apps"
+ICON_NAME="yggdrasil-lazy"
+# МЕНЯЕМ ПУТЬ: Устанавливаем иконку в локальную папку пользователя (не требуя sudo)
+ICON_TARGET_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
 FULL_ICON_PATH="$ICON_TARGET_DIR/$ICON_NAME.svg"
 
 echo "--- Установщик Yggdrasil Lazy Launcher ---"
@@ -75,21 +76,20 @@ SUDO_RULE="$CURRENT_USER ALL=(ALL) NOPASSWD: $TARGET_PATH"
 echo "$SUDO_RULE" | sudo tee "$SUDOERS_FILE" > /dev/null
 sudo chmod 440 "$SUDOERS_FILE"
 
-# --- 4. Установка иконки ---
-echo "Скачивание и установка иконки..."
+# --- 4. Установка иконки (БЕЗ SUDO) ---
+echo "Скачивание и установка иконки в локальный каталог..."
 
-# Создаем целевую папку, если ее нет
-sudo mkdir -p "$ICON_TARGET_DIR"
+# Создаем папку без sudo, т.к. она в $HOME
+mkdir -p "$ICON_TARGET_DIR"
 
-# Скачиваем иконку и сохраняем ее как yggdrasil-lazy.svg
-if ! sudo curl -L "$ICON_URL" -o "$FULL_ICON_PATH"; then
-    echo "ПРЕДУПРЕЖДЕНИЕ: Не удалось скачать иконку. Проверьте соединение или наличие curl."
+# Скачиваем иконку без sudo
+if ! curl -L "$ICON_URL" -o "$FULL_ICON_PATH"; then
+    echo "ПРЕДУПРЕЖДЕНИЕ: Не удалось скачать иконку."
 else
-    # Обновляем кэш иконок, чтобы значок появился сразу
-    sudo gtk-update-icon-cache -f "$ICON_TARGET_DIR" 2>/dev/null
-    echo "Иконка установлена."
+    # Обновляем кэш иконок (без sudo, т.к. каталог локальный)
+    gtk-update-icon-cache -f "$ICON_TARGET_DIR" 2>/dev/null
+    echo "Иконка установлена локально."
 fi
-
 
 # --- 5. Создание ярлыка ---
 echo "Создание ярлыка..."
