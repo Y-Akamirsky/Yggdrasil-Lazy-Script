@@ -7,6 +7,12 @@ SUDOERS_FILE="/etc/sudoers.d/yggdrasil_lazy"
 DESKTOP_FILE_PATH="$HOME/.local/share/applications/Yggdrasil-Lazy.desktop"
 CURRENT_USER=$(whoami)
 
+# --- Настройки иконки ---
+ICON_URL="https://logosandtypes.com/wp-content/uploads/2022/03/yggdrasil.svg"
+ICON_NAME="yggdrasil-lazy" # Уникальное имя для иконки
+ICON_TARGET_DIR="/usr/share/icons/hicolor/scalable/apps"
+FULL_ICON_PATH="$ICON_TARGET_DIR/$ICON_NAME.svg"
+
 echo "--- Установщик Yggdrasil Lazy Launcher ---"
 echo "Скрипт будет установлен в $TARGET_PATH"
 
@@ -19,9 +25,7 @@ fi
 # --- 1. Создание скрипта запуска (ГЕНЕРАЦИЯ НА ЛЕТУ) ---
 echo "Генерация и установка исполняемого файла..."
 
-# ВНИМАНИЕ: Вставь код из твоего yggdrasil_autorun.sh между EOF ниже.
-# Используем 'EOF' в кавычках, чтобы переменные внутри не раскрывались при установке.
-
+# ВНИМАНИЕ: Код встроенного скрипта остается без изменений
 sudo tee "$TARGET_PATH" > /dev/null << 'EOF'
 #!/bin/bash
 # --- НАЧАЛО ВСТРОЕННОГО СКРИПТА ---
@@ -58,20 +62,36 @@ echo -e "0  \b\b\n"
 # --- КОНЕЦ ВСТРОЕННОГО СКРИПТА ---
 EOF
 
-# --- Настройка прав ---
+# --- 2. Настройка прав (Скрипт) ---
 sudo chown root:root "$TARGET_PATH"
 sudo chmod 755 "$TARGET_PATH"
 
 echo "Файл создан и защищен."
 
-# --- 2. Настройка sudoers ---
+# --- 3. Настройка sudoers ---
 echo "Настройка запуска без пароля..."
 SUDO_RULE="$CURRENT_USER ALL=(ALL) NOPASSWD: $TARGET_PATH"
 
 echo "$SUDO_RULE" | sudo tee "$SUDOERS_FILE" > /dev/null
 sudo chmod 440 "$SUDOERS_FILE"
 
-# --- 3. Создание ярлыка ---
+# --- 4. Установка иконки ---
+echo "Скачивание и установка иконки..."
+
+# Создаем целевую папку, если ее нет
+sudo mkdir -p "$ICON_TARGET_DIR"
+
+# Скачиваем иконку и сохраняем ее как yggdrasil-lazy.svg
+if ! sudo curl -L "$ICON_URL" -o "$FULL_ICON_PATH"; then
+    echo "ПРЕДУПРЕЖДЕНИЕ: Не удалось скачать иконку. Проверьте соединение или наличие curl."
+else
+    # Обновляем кэш иконок, чтобы значок появился сразу
+    sudo gtk-update-icon-cache -f "$ICON_TARGET_DIR" 2>/dev/null
+    echo "Иконка установлена."
+fi
+
+
+# --- 5. Создание ярлыка ---
 echo "Создание ярлыка..."
 
 mkdir -p "$HOME/.local/share/applications"
@@ -84,7 +104,7 @@ Exec=sudo $TARGET_NAME
 Terminal=true
 Type=Application
 Categories=Network;System;
-Icon=utilities-terminal
+Icon=$ICON_NAME   # ИСПОЛЬЗУЕМ ИМЯ НОВОЙ ИКОНКИ
 StartupNotify=true
 EOF
 
