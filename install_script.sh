@@ -28,15 +28,21 @@ sudo tee "$TARGET_PATH" > /dev/null << 'EOF'
 
 echo "Запуск Yggdrasil одним кликом для ленивых линукс юзеров :) by Akamirsky..."
 echo "---"
-echo "Для корректной работы без запроса пароля читаем Readme"
+echo "Запуск демона yggdrasil.service"
 
-# Команды выполняются через sudo без запроса пароля благодаря настройкам sudoers
+sleep 1
+
 sudo systemctl start yggdrasil.service
+
+echo "Проверка подключения через 2 секунды"
+
+sleep 2
+
 sudo yggdrasilctl getself
 
 echo "---"
-echo "Готово, чекай подключение!"
-
+echo "Готово. Если не уверен, проверь подключение сам"
+echo "выполнив команду sudo yggdrasilctl getself вручную"
 # Обратный отсчет
 SECONDS_TO_WAIT=5
 # Печатаем начальный текст
