@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Yggdrasil Lazy
+Comment=Start Yggdrasil service and check connection
+Exec=$FULL_SCRIPT_PATH
+Terminal=true
+Type=Application
+Categories=System;Tools;
+Icon=utilities-terminal
+StartupNotify=true
