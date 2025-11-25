@@ -6,6 +6,7 @@ TARGET_NAME="yggdrasil-launcher"
 TARGET_PATH="/usr/local/bin/$TARGET_NAME"
 SUDOERS_FILE="/etc/sudoers.d/yggdrasil_lazy"
 DESKTOP_FILE_PATH="$HOME/.local/share/applications/Yggdrasil-Lazy.desktop"
+UNINSTALLER_PATH="/usr/local/bin/ygg-lazy-remove"
 
 # --- Настройки иконки ---
 # Перенесли настройки вверх, чтобы использовать переменную FULL_ICON_PATH для очистки
@@ -30,6 +31,7 @@ fi
 # ==========================================
 # --- 0. ОЧИСТКА ПРЕДЫДУЩЕЙ ВЕРСИИ ---
 # ==========================================
+echo "=========================================="
 echo "Checking for previous version... | Проверка предыдущей версии..."
 
 # Удаляем системные файлы (через sudo)
@@ -41,6 +43,12 @@ fi
 if [ -f "$SUDOERS_FILE" ]; then
     echo "Removing old sudoers rule... | Удаление старого правила sudo..."
     sudo rm -f "$SUDOERS_FILE"
+fi
+
+# Удаление старого деинсталлятора
+if [ -f "$UNINSTALLER_PATH" ]; then
+    echo "Removing old uninstaller script... | Удаление старого деинсталлятора..."
+    sudo rm -f "$UNINSTALLER_PATH"
 fi
 
 # Удаляем пользовательские файлы (без sudo, используем текущего юзера)
@@ -55,10 +63,11 @@ if [ -f "$FULL_ICON_PATH" ]; then
 fi
 
 echo "Cleanup done (if needed). | Очистка завершена."
-# ==========================================
+echo "=========================================="
 
 # --- 1. Создание скрипта запуска (ГЕНЕРАЦИЯ НА ЛЕТУ) ---
 echo "Generating & install main script... | Генерация и установка исполняемого файла..."
+echo ""
 
 # ВНИМАНИЕ: Код встроенного скрипта остается без изменений
 sudo tee "$TARGET_PATH" > /dev/null << 'EOF'
@@ -113,6 +122,7 @@ sudo chown root:root "$TARGET_PATH"
 sudo chmod 755 "$TARGET_PATH"
 
 echo "File created & protected. | Файл создан и защищен."
+echo ""
 
 # --- 3. Настройка sudoers ---
 echo "Setting up sudo rule (without password launching)... | Настройка запуска без пароля..."
@@ -120,10 +130,10 @@ SUDO_RULE="$CURRENT_USER ALL=(ALL) NOPASSWD: $TARGET_PATH"
 
 echo "$SUDO_RULE" | sudo tee "$SUDOERS_FILE" > /dev/null
 sudo chmod 440 "$SUDOERS_FILE"
+echo ""
 
 # --- 4. Установка иконки (БЕЗ SUDO) ---
 echo "Downloading & install icon... | Скачивание и установка иконки в локальный каталог..."
-
 # Создаем папку без sudo, т.к. она в $HOME
 mkdir -p "$ICON_TARGET_DIR"
 
@@ -136,8 +146,11 @@ else
     echo "Icon installed locally. | Иконка установлена локально."
 fi
 
+echo ""
+
 # --- 5. Создание ярлыка ---
 echo "Creating .desktop file... | Создание ярлыка..."
+echo ""
 
 mkdir -p "$HOME/.local/share/applications"
 
@@ -155,6 +168,47 @@ EOF
 
 # Now with Icon!
 
+# ==========================================
+# --- 6. Создание скрипта-деинсталлятора ---
+# ==========================================
+echo "=========================================="
+echo "Creating uninstallation script... | Создание скрипта для удаления..."
+
+sudo tee "$UNINSTALLER_PATH" > /dev/null << EOF
+#!/bin/bash
+
+# Для удаления могут понадобиться права, запрашиваем их сразу
+if ! sudo -v; then
+    echo "Canceled or wrong password. | Отмена операции или неверный пароль."
+    exit 1
+fi
+
+echo "Removing Yggdrasil Lazy files..."
+
+# Удаление системных файлов (значения переменных подставлены из основного скрипта)
+sudo rm -f "$TARGET_PATH"
+sudo rm -f "$SUDOERS_FILE"
+
+# Удаление пользовательских файлов
+# (Важно: $HOME также подставится сюда, становясь частью пути)
+rm -f "$DESKTOP_FILE_PATH"
+rm -f "$FULL_ICON_PATH"
+
+# Удаление самого деинсталлятора
+sudo rm -f "$UNINSTALLER_PATH"
+
+echo "EN ═══════════"
+echo "Yggdrasil Lazy uninstallation complete."
+echo "RU ═══════════"
+echo "Удаление Yggdrasil Lazy завершено."
+EOF
+
+sudo chmod +x "$UNINSTALLER_PATH"
+
+echo "..."
+echo "Uninstaller created: $UNINSTALLER_PATH"
+echo ""
+
 chmod +x "$DESKTOP_FILE_PATH"
 update-desktop-database "$HOME/.local/share/applications/" 2>/dev/null
 
@@ -162,3 +216,8 @@ echo "EN ═══════════"
 echo "Install completed! Now you can launch script in app menu."
 echo "RU ═══════════"
 echo "Установка завершена! Можно запускать через меню приложений."
+echo ""
+echo "=========================================="
+echo ""
+echo "Удалить скрипт из системы можно командой - ygg-lazy-remove"
+echo ""
