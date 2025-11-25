@@ -5,3 +5,7 @@ Install:
 ```bash
 curl -sL https://raw.githubusercontent.com/Y-Akamirsky/Yggdrasil-Lazy-Script/refs/heads/main/install_script.sh | bash
 ```
+Remove:
+```bash
+ygg-lazy-remove
+```
