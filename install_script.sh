@@ -14,44 +14,59 @@ ICON_NAME="yggdrasil-lazy"
 ICON_TARGET_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
 FULL_ICON_PATH="$ICON_TARGET_DIR/$ICON_NAME.svg"
 
+echo "EN ═══════════"
+echo "--- Yggdrasil Lazy Launcher Installer ---"
+echo "Script will be installed in $TARGET_PATH"
+echo "RU ═══════════"
 echo "--- Установщик Yggdrasil Lazy Launcher ---"
 echo "Скрипт будет установлен в $TARGET_PATH"
 
 # Запрашиваем права sudo сразу
 if ! sudo -v; then
-    echo "Отмена операции или неверный пароль."
+    echo "Canceled or wrong password. | Отмена операции или неверный пароль."
     exit 1
 fi
 
 # --- 1. Создание скрипта запуска (ГЕНЕРАЦИЯ НА ЛЕТУ) ---
-echo "Генерация и установка исполняемого файла..."
+echo "Generating & install main script... | Генерация и установка исполняемого файла..."
 
 # ВНИМАНИЕ: Код встроенного скрипта остается без изменений
 sudo tee "$TARGET_PATH" > /dev/null << 'EOF'
 #!/bin/bash
 # --- НАЧАЛО ВСТРОЕННОГО СКРИПТА ---
 
-echo "Запуск Yggdrasil одним кликом для ленивых линукс юзеров :) by Akamirsky..."
-echo "---"
-echo "Запуск демона yggdrasil.service"
+echo "EN ═══════════"
+echo "Launch yggdrasil.service by one click! Without terminal! For lazy linux users :)"
+echo "RU ═══════════"
+echo "Запуск yggdrasil.service одним кликом! Без терминала! Для ленивых линукс юзеров :)"
+echo "╔════════════╗"
+echo "║By Akamirsky║"
+echo "╚════════════╝"
+echo "Launching yggdrasil.service daemon..."
 
 sleep 1
 
 sudo systemctl start yggdrasil.service
 
-echo "Проверка подключения через 2 секунды"
+echo "══════════════"
+
+echo "Connection check after 2 seconds..."
 
 sleep 2
 
 sudo yggdrasilctl getself
 
-echo "---"
-echo "Готово. Если не уверен, проверь подключение сам"
-echo "выполнив команду sudo yggdrasilctl getself вручную"
+echo "EN ═══════════"
+echo "Complete! For check connection manually status you can"
+echo "use command 'sudo yggdrasilctl getself'"
+echo "RU ═══════════"
+echo "Готово. Для проверки подключения вручную вы можете"
+echo "выполнить команду 'sudo yggdrasilctl getself'"
+
 # Обратный отсчет
 SECONDS_TO_WAIT=5
 # Печатаем начальный текст
-echo -ne "Окно закроется через $SECONDS_TO_WAIT секунд... "
+echo -ne "Window close shortly $SECONDS_TO_WAIT seconds... "
 
 for i in $(seq $SECONDS_TO_WAIT -1 1); do
     echo -ne "$i \b\b"
@@ -67,32 +82,32 @@ EOF
 sudo chown root:root "$TARGET_PATH"
 sudo chmod 755 "$TARGET_PATH"
 
-echo "Файл создан и защищен."
+echo "File created & protected. | Файл создан и защищен."
 
 # --- 3. Настройка sudoers ---
-echo "Настройка запуска без пароля..."
+echo "Setting up sudo rule (withot password launching)... | Настройка запуска без пароля..."
 SUDO_RULE="$CURRENT_USER ALL=(ALL) NOPASSWD: $TARGET_PATH"
 
 echo "$SUDO_RULE" | sudo tee "$SUDOERS_FILE" > /dev/null
 sudo chmod 440 "$SUDOERS_FILE"
 
 # --- 4. Установка иконки (БЕЗ SUDO) ---
-echo "Скачивание и установка иконки в локальный каталог..."
+echo "Downloading & install icon... | Скачивание и установка иконки в локальный каталог..."
 
 # Создаем папку без sudo, т.к. она в $HOME
 mkdir -p "$ICON_TARGET_DIR"
 
 # Скачиваем иконку без sudo
 if ! curl -L "$ICON_URL" -o "$FULL_ICON_PATH"; then
-    echo "ПРЕДУПРЕЖДЕНИЕ: Не удалось скачать иконку."
+    echo "WARNING: Icon downloading error. | Не удалось скачать иконку."
 else
     # Обновляем кэш иконок (без sudo, т.к. каталог локальный)
     gtk-update-icon-cache -f "$ICON_TARGET_DIR" 2>/dev/null
-    echo "Иконка установлена локально."
+    echo "Icon installed locally. | Иконка установлена локально."
 fi
 
 # --- 5. Создание ярлыка ---
-echo "Создание ярлыка..."
+echo "Creating .desktop file... | Создание ярлыка..."
 
 mkdir -p "$HOME/.local/share/applications"
 
@@ -113,5 +128,7 @@ EOF
 chmod +x "$DESKTOP_FILE_PATH"
 update-desktop-database "$HOME/.local/share/applications/" 2>/dev/null
 
-echo "---"
+echo "EN ═══════════"
+echo "Install completed! Now you can launch script in app menu."
+echo "RU ═══════════"
 echo "Установка завершена! Можно запускать через меню приложений."
