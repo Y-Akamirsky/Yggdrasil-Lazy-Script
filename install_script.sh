@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# --- Настройки ---
+# --- Настройки (Пути и переменные) ---
+CURRENT_USER=$(whoami)
 TARGET_NAME="yggdrasil-launcher"
 TARGET_PATH="/usr/local/bin/$TARGET_NAME"
 SUDOERS_FILE="/etc/sudoers.d/yggdrasil_lazy"
 DESKTOP_FILE_PATH="$HOME/.local/share/applications/Yggdrasil-Lazy.desktop"
-CURRENT_USER=$(whoami)
 
 # --- Настройки иконки ---
+# Перенесли настройки вверх, чтобы использовать переменную FULL_ICON_PATH для очистки
 ICON_URL="https://raw.githubusercontent.com/Y-Akamirsky/Yggdrasil-Lazy-Script/refs/heads/main/yggdrasil.svg"
 ICON_NAME="yggdrasil-lazy"
-# МЕНЯЕМ ПУТЬ: Устанавливаем иконку в локальную папку пользователя (не требуя sudo)
 ICON_TARGET_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
 FULL_ICON_PATH="$ICON_TARGET_DIR/$ICON_NAME.svg"
 
@@ -26,6 +26,36 @@ if ! sudo -v; then
     echo "Canceled or wrong password. | Отмена операции или неверный пароль."
     exit 1
 fi
+
+# ==========================================
+# --- 0. ОЧИСТКА ПРЕДЫДУЩЕЙ ВЕРСИИ ---
+# ==========================================
+echo "Checking for previous version... | Проверка предыдущей версии..."
+
+# Удаляем системные файлы (через sudo)
+if [ -f "$TARGET_PATH" ]; then
+    echo "Removing old launcher script... | Удаление старого скрипта запуска..."
+    sudo rm -f "$TARGET_PATH"
+fi
+
+if [ -f "$SUDOERS_FILE" ]; then
+    echo "Removing old sudoers rule... | Удаление старого правила sudo..."
+    sudo rm -f "$SUDOERS_FILE"
+fi
+
+# Удаляем пользовательские файлы (без sudo, используем текущего юзера)
+if [ -f "$DESKTOP_FILE_PATH" ]; then
+    echo "Removing old desktop shortcut... | Удаление старого ярлыка..."
+    rm -f "$DESKTOP_FILE_PATH"
+fi
+
+if [ -f "$FULL_ICON_PATH" ]; then
+    echo "Removing old icon... | Удаление старой иконки..."
+    rm -f "$FULL_ICON_PATH"
+fi
+
+echo "Cleanup done (if needed). | Очистка завершена."
+# ==========================================
 
 # --- 1. Создание скрипта запуска (ГЕНЕРАЦИЯ НА ЛЕТУ) ---
 echo "Generating & install main script... | Генерация и установка исполняемого файла..."
@@ -85,7 +115,7 @@ sudo chmod 755 "$TARGET_PATH"
 echo "File created & protected. | Файл создан и защищен."
 
 # --- 3. Настройка sudoers ---
-echo "Setting up sudo rule (withot password launching)... | Настройка запуска без пароля..."
+echo "Setting up sudo rule (without password launching)... | Настройка запуска без пароля..."
 SUDO_RULE="$CURRENT_USER ALL=(ALL) NOPASSWD: $TARGET_PATH"
 
 echo "$SUDO_RULE" | sudo tee "$SUDOERS_FILE" > /dev/null
