@@ -1,5 +1,5 @@
 # Yggdrasil-Lazy-Script
-Just script for my friends to run yggdrasil without enable it in systemctl
+This simple script allows you to run the yggdrasil.service daemon without starting it with a long systemctl command. An alternative is the 'sudo systemctl enable --now yggdrasil.service' command. However, manual launch is better for my situation and maybe for you.
 
 Install:
 ```bash
